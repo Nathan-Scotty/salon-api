@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import * as c from '../controllers/media.controller';
+import { authenticate, requireAdmin } from '../middleware/auth.middleware';
+const router = Router();
+router.get('/', c.getByPost);
+router.get('/:id', c.getById);
+router.post('/', authenticate, requireAdmin, c.create);
+router.patch('/:id', authenticate, requireAdmin, c.update);
+router.delete('/:id', authenticate, requireAdmin, c.remove);
+export default router;

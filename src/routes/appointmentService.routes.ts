@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import * as c from '../controllers/appointmentService.controller';
+import { authenticate } from '../middleware/auth.middleware';
+const router = Router();
+router.use(authenticate);
+router.get('/', c.getByAppointment);
+router.post('/', c.add);
+router.patch('/', c.updatePrice);
+router.delete('/', c.remove);
+export default router;

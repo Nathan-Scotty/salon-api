@@ -1,0 +1,11 @@
+import { Router } from 'express';
+import * as c from '../controllers/payment.controller';
+import { authenticate, requireAdmin } from '../middleware/auth.middleware';
+const router = Router();
+router.use(authenticate);
+router.get('/', requireAdmin, c.getAll);
+router.get('/:id', c.getById);
+router.post('/', c.create);
+router.patch('/:id', c.update);
+router.delete('/:id', requireAdmin, c.remove);
+export default router;

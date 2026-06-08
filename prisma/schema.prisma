@@ -1,63 +1,227 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ─────────────────────────────────────────────────────────
+//  DHB Davilas Hair & Beauty — Prisma Schema (MySQL)
+// ─────────────────────────────────────────────────────────
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id             String              @id @default(cuid())
-  name           String
-  email          String              @unique
-  password       String
-  role           Role                @default(USER)
-  appointments   Appointment[]
-  comments       Comment[]
-  availabilities AdminAvailability[]
-  createdAt      DateTime            @default(now())
-}
-
-model AdminAvailability {
-  id              String   @id @default(cuid())
-  date            DateTime
-  startHour       String
-  endHour         String
-  maxAppointments Int
-  admin           User     @relation(fields: [adminId], references: [id])
-  adminId         String
-  createdAt       DateTime @default(now())
-
-  @@unique([date, adminId])
-}
-
-model Appointment {
-  id        String   @id @default(cuid())
-  date      DateTime
-  hour      String?
-  service   String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  createdAt DateTime @default(now())
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  stars     Int
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  createdAt DateTime @default(now())
-}
+// ─── Enums ────────────────────────────────────────────────
 
 enum Role {
-  USER
   ADMIN
+  STYLIST
+  CLIENT
 }
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIAL
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum PostCategory {
+  GALLERY
+  BEFORE_AFTER
+}
+
+// ─── User (Admin + Stylists share this table) ─────────────
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  phone        String?
+  role         Role     @default(CLIENT)
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  stylist      Stylist?
+  client       Client?
+  posts        Post[]
+}
+
+// ─── Client ───────────────────────────────────────────────
+
+model Client {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  payments     Payment[]
+}
+
+// ─── Stylist ──────────────────────────────────────────────
+
+model Stylist {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  bio          String?  @db.Text
+  specialties  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments  Appointment[]
+  availabilities Availability[]
+}
+
+// ─── Service ──────────────────────────────────────────────
+
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  durationMin Int      // duration in minutes
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  appointmentServices AppointmentService[]
+}
+
+// ─── Availability (admin posts open time slots) ───────────
+
+model Availability {
+  id        Int      @id @default(autoincrement())
+  stylistId Int
+  date      DateTime @db.Date
+  startTime DateTime @db.Time(0)
+  endTime   DateTime @db.Time(0)
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  stylist      Stylist      @relation(fields: [stylistId], references: [id], onDelete: Cascade)
+  appointment  Appointment?
+}
+
+// ─── Appointment ──────────────────────────────────────────
+
+model Appointment {
+  id             Int               @id @default(autoincrement())
+  clientId       Int
+  stylistId      Int
+  availabilityId Int?              @unique
+  scheduledAt    DateTime
+  status         AppointmentStatus @default(PENDING)
+  notes          String?           @db.Text
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  client       Client               @relation(fields: [clientId], references: [id])
+  stylist      Stylist              @relation(fields: [stylistId], references: [id])
+  availability Availability?        @relation(fields: [availabilityId], references: [id])
+  services     AppointmentService[]
+  payment      Payment?
+}
+
+// ─── AppointmentService (many-to-many) ────────────────────
+
+model AppointmentService {
+  id            Int @id @default(autoincrement())
+  appointmentId Int
+  serviceId     Int
+  priceAtTime   Decimal @db.Decimal(10, 2) // snapshot price at booking
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  service     Service     @relation(fields: [serviceId], references: [id])
+
+  @@unique([appointmentId, serviceId])
+}
+
+// ─── Payment ──────────────────────────────────────────────
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  appointmentId Int           @unique
+  clientId      Int
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod @default(CASH)
+  status        PaymentStatus @default(UNPAID)
+  paidAt        DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  client      Client      @relation(fields: [clientId], references: [id])
+}
+
+// ─── Product / Inventory ──────────────────────────────────
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Post (admin gallery / portfolio) ────────────────────
+
+model Post {
+  id          Int          @id @default(autoincrement())
+  authorId    Int
+  title       String?
+  caption     String?      @db.Text
+  category    PostCategory @default(GALLERY)   // ← add this
+  isPublished Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  author User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  media  Media[]
+}
+
+// ─── Media (images/videos attached to posts) ──────────────
+
+model Media {
+  id        Int       @id @default(autoincrement())
+  postId    Int
+  url       String
+  type      MediaType @default(IMAGE)
+  altText   String?
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
