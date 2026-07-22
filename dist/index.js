@@ -21,8 +21,12 @@ const post_routes_1 = __importDefault(require("./routes/post.routes"));
 const media_routes_1 = __importDefault(require("./routes/media.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 5000;
-app.use((0, cors_1.default)());
+const PORT = process.env.PORT || 8080;
+app.use((0, cors_1.default)({
+    origin: '*',
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use((0, morgan_1.default)('dev'));
 app.use(express_1.default.json());
 app.use('/auth', auth_routes_1.default);

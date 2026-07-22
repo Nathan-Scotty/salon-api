@@ -107,6 +107,7 @@ model Service {
   description String?  @db.Text
   price       Decimal  @db.Decimal(10, 2)
   durationMin Int      // duration in minutes
+  imageUrl    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
