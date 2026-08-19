@@ -15,6 +15,7 @@ import paymentRoutes from './routes/payment.routes';
 import productRoutes from './routes/product.routes';
 import postRoutes from './routes/post.routes';
 import mediaRoutes from './routes/media.routes';
+import pushRoutes from './routes/push.routes';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/payments',             paymentRoutes);
 app.use('/products',             productRoutes);
 app.use('/posts',                postRoutes);
 app.use('/media',                mediaRoutes);
+app.use('/push',                 pushRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 

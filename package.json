@@ -23,7 +23,8 @@
     "lodash.merge": "^4.6.2",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.2",
-    "nodemailer": "^8.0.10"
+    "nodemailer": "^8.0.10",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -33,6 +34,7 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^2.1.0",
     "@types/node": "^22.14.0",
+    "@types/web-push": "^3.6.4",
     "prisma": "^6.16.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
