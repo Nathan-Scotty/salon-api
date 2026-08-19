@@ -16,6 +16,7 @@ import productRoutes from './routes/product.routes';
 import postRoutes from './routes/post.routes';
 import mediaRoutes from './routes/media.routes';
 import pushRoutes from './routes/push.routes';
+import sseRoutes from './routes/sse.routes';
 
 dotenv.config();
 
@@ -30,19 +31,20 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 
-app.use('/auth',                 authRoutes);
-app.use('/users',                userRoutes);
-app.use('/clients',              clientRoutes);
-app.use('/stylists',             stylistRoutes);
-app.use('/services',             serviceRoutes);
-app.use('/availability',         availabilityRoutes);
-app.use('/appointments',         appointmentRoutes);
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/clients', clientRoutes);
+app.use('/stylists', stylistRoutes);
+app.use('/services', serviceRoutes);
+app.use('/availability', availabilityRoutes);
+app.use('/appointments', appointmentRoutes);
 app.use('/appointment-services', appointmentServiceRoutes);
-app.use('/payments',             paymentRoutes);
-app.use('/products',             productRoutes);
-app.use('/posts',                postRoutes);
-app.use('/media',                mediaRoutes);
-app.use('/push',                 pushRoutes);
+app.use('/payments', paymentRoutes);
+app.use('/products', productRoutes);
+app.use('/posts', postRoutes);
+app.use('/media', mediaRoutes);
+app.use('/push', pushRoutes);
+app.use('/sse', sseRoutes);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 

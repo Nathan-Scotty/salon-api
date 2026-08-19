@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { findAllAppointments, findAppointmentById, createAppointment, updateAppointment, deleteAppointment } from '../services/appointment.service';
+import { broadcast } from './sse.controller';
 import prisma from '../lib/prisma';
 
 export async function getAll(_req: Request, res: Response) {
@@ -87,6 +88,16 @@ export async function createGuest(req: Request, res: Response) {
         data: { isBooked: true },
       });
     }
+
+    // 5 — Broadcast en temps réel ← AJOUTE CES LIGNES
+    broadcast('new_appointment', {
+      id: appointment.id,
+      clientName: user.name,
+      clientEmail: user.email,
+      scheduledAt: appointment.scheduledAt,
+      status: appointment.status,
+      notes: appointment.notes,
+    });
 
     return res.status(201).json({ data: { appointment, clientName: user.name, clientEmail: user.email } });
   } catch (e: any) {
