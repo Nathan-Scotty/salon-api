@@ -22,7 +22,7 @@ export async function createAvailability(stylistId: number, date: string, startT
   return prisma.availability.create({
     data: {
       stylistId,
-      date: new Date(date),
+      date: new Date(date + 'T12:00:00.000Z'),
       startTime: new Date(`1970-01-01T${startTime}:00`),
       endTime: new Date(`1970-01-01T${endTime}:00`),
     },
@@ -33,7 +33,7 @@ export async function updateAvailability(id: number, data: any) {
   return prisma.availability.update({
     where: { id },
     data: {
-      ...(data.date ? { date: new Date(data.date) } : {}),
+      ...(data.date ? { date: new Date(data.date + 'T12:00:00.000Z') } : {}),
       ...(data.startTime ? { startTime: new Date(`1970-01-01T${data.startTime}:00`) } : {}),
       ...(data.endTime ? { endTime: new Date(`1970-01-01T${data.endTime}:00`) } : {}),
       ...(data.isBooked !== undefined ? { isBooked: data.isBooked } : {}),
